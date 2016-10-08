@@ -1,0 +1,2 @@
+# fundamental_of_computer_graphics_homework_1
+Assignment 1: Raytrace
