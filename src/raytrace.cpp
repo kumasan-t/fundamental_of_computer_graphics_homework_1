@@ -4,8 +4,11 @@
 // compute the color corresponing to a ray by raytracing
 vec3f raytrace_ray(Scene* scene, ray3f ray) {
     // get scene intersection
+	intersection3f scene_intersection = intersect_surfaces(scene, ray);
     // if not hit, return background
-    
+	if (!scene_intersection.hit)
+		return scene->background;
+
     // accumulate color starting with ambient
     
     // foreach light
@@ -48,15 +51,15 @@ image3f raytrace(Scene* scene) {
 				image.at(i, j).x = accumulated_color.z;
 			}
 		}
-		// else
+	// else
 	} else {
-        // foreach pixel
-                // init accumulated color
-                // foreach sample
-                        // compute ray-camera parameters (u,v) for the pixel and the sample
-                        // compute camera ray
-                        // set pixel to the color raytraced with the ray
-                // scale by the number of samples
+		// foreach pixel
+				// init accumulated color
+				// foreach sample
+						// compute ray-camera parameters (u,v) for the pixel and the sample
+						// compute camera ray
+						// set pixel to the color raytraced with the ray
+				// scale by the number of samples
 	}
     // done
     return image;
