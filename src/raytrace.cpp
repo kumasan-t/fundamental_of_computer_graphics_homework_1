@@ -28,11 +28,28 @@ image3f raytrace(Scene* scene) {
     auto image = image3f(scene->image_width, scene->image_height);
     
     // if no anti-aliasing
-        // foreach pixel
-                // compute ray-camera parameters (u,v) for the pixel
-                // compute camera ray
-                // set pixel to the color raytraced with the ray
-    // else
+	if (true) {
+		// foreach pixel
+		for (int i = 0; i < image.width; i++) {
+			for (int j = 0; j < image.height; j++) {
+				// compute ray-camera parameters (u,v) for the pixel
+				auto camera_frame = scene->camera->frame;
+				auto point_on_image_x = camera_frame.o.x + (i - 0.5) * image.width * camera_frame.x;
+				auto point_on_image_y = camera_frame.o.y + (j - 0.5) * image.width * camera_frame.y;
+				auto point_on_image_z = camera_frame.o.z + scene->camera->dist;
+				vec3f point_on_image3f(point_on_image_x, point_on_image_y, point_on_image_z);
+				// compute camera ray
+				normalize(point_on_image3f);
+				ray3f camera_ray = ray3f(camera_frame.o, point_on_image3f);
+				// set pixel to the color raytraced with the ray
+				vec3f accumulated_color = raytrace_ray(scene, camera_ray);
+				image.at(i, j).x = accumulated_color.x;
+				image.at(i, j).x = accumulated_color.y;
+				image.at(i, j).x = accumulated_color.z;
+			}
+		}
+		// else
+	} else {
         // foreach pixel
                 // init accumulated color
                 // foreach sample
@@ -40,15 +57,13 @@ image3f raytrace(Scene* scene) {
                         // compute camera ray
                         // set pixel to the color raytraced with the ray
                 // scale by the number of samples
-    
+	}
     // done
     return image;
 }
 
 // runs the raytrace over all tests and saves the corresponding images
 int main(int argc, char** argv) {
-	char c;
-	scanf_s(&c);
     auto args = parse_cmdline(argc, argv,
         { "01_raytrace", "raytrace a scene",
             {  {"resolution", "r", "image resolution", "int", true, jsonvalue() }  },
