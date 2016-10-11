@@ -3,52 +3,62 @@
 
 // compute the color corresponing to a ray by raytracing
 vec3f raytrace_ray(Scene* scene, ray3f ray) {
+	vec3f color = zero3f;
     // get scene intersection
-	intersection3f scene_intersection = intersect_surfaces(scene, ray);
+	intersection3f intersection = intersect_surfaces(scene, ray);
     // if not hit, return background
-	if (!scene_intersection.hit)
+	if (!intersection.hit) {
 		return scene->background;
-
+	}
     // accumulate color starting with ambient
+	color += scene->ambient * intersection.mat->kd;
     
-    // foreach light
+	// foreach light
+	for (auto light : scene->lights) {
         // compute light response
         // compute light direction
         // compute the material response (brdf*cos)
         // check for shadows and accumulate if needed
+	}
     
     // if the material has reflections
         // create the reflection ray
         // accumulate the reflected light (recursive call) scaled by the material reflection
     
-    // return the accumulated color∫
-    return zero3f;
+    // return the accumulated color
+    return color;
 }
 
 // raytrace an image
 image3f raytrace(Scene* scene) {
     // allocate an image of the proper size
     auto image = image3f(scene->image_width, scene->image_height);
-    
+	int width = image.width();		// 512px
+	int height = image.height();	// 512px
     // if no anti-aliasing
 	if (true) {
 		// foreach pixel
-		for (int i = 0; i < image.width; i++) {
-			for (int j = 0; j < image.height; j++) {
+		for (int pixel_j = 0; pixel_j < height; pixel_j++) {
+			for (int pixel_i = 0; pixel_i < width; pixel_i++) {
+				
 				// compute ray-camera parameters (u,v) for the pixel
+				auto u = (pixel_i + 0.5f) / width;
+				auto v = (pixel_j + 0.5f) / height;
 				auto camera_frame = scene->camera->frame;
-				auto point_on_image_x = camera_frame.o.x + (i - 0.5) * image.width * camera_frame.x;
-				auto point_on_image_y = camera_frame.o.y + (j - 0.5) * image.width * camera_frame.y;
-				auto point_on_image_z = camera_frame.o.z + scene->camera->dist;
-				vec3f point_on_image3f(point_on_image_x, point_on_image_y, point_on_image_z);
+				
+				// computer the ray direction				
+				vec3f ray_direction = 
+					vec3f(
+					(u - 0.5f) * scene->camera->width,
+					(v - 0.5f) * scene->camera->height,
+					-1 * scene->camera->dist);
+
 				// compute camera ray
-				normalize(point_on_image3f);
-				ray3f camera_ray = ray3f(camera_frame.o, point_on_image3f);
+				vec3f camera_ray = normalize(ray_direction);
+				ray3f ray = ray3f(zero3f, camera_ray);
+				
 				// set pixel to the color raytraced with the ray
-				vec3f accumulated_color = raytrace_ray(scene, camera_ray);
-				image.at(i, j).x = accumulated_color.x;
-				image.at(i, j).x = accumulated_color.y;
-				image.at(i, j).x = accumulated_color.z;
+				image.at(pixel_i, pixel_j) = raytrace_ray(scene, ray);
 			}
 		}
 	// else
