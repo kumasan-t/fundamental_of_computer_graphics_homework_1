@@ -21,7 +21,6 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
     // create a default intersection record to be returned
     auto intersection = intersection3f();
 	float min_distance = INFINITY;
-	ray = transform_ray(scene->camera->frame, ray);
 	// grab the surfaces presents in the scene
 	auto surfaces = scene->surfaces;
 	// foreach surface
@@ -40,17 +39,17 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 				continue;
 			}
 
-			auto point_on_plane = ray.eval(t);
+			auto ray_at_t = ray.eval(t);									// world coordinate
+			auto plane_point = transform_point(surface->frame, ray_at_t);   // surface local coordinate
 			// check if this is the closest intersection, continue if not
-			if (surface->frame.o.x + surface->radius < point_on_plane.x or
-				surface->frame.o.x - surface->radius > point_on_plane.x or
-				surface->frame.o.y + surface->radius < point_on_plane.y or
-				surface->frame.o.y - surface->radius > point_on_plane.y) {
+			if ( abs(plane_point.x) > surface->radius or
+				 abs(plane_point.y) > surface->radius) {
 				continue;
 			} else {
 				// if hit, set intersection record value
 				if (t < min_distance) {
-					intersection.pos = point_on_plane;
+					//intersection.pos = transform_point_inverse(scene->camera->frame,ray_at_t);
+					intersection.pos = ray_at_t;
 					intersection.ray_t = t;
 					intersection.hit = true;
 					intersection.norm = surface->frame.z;
@@ -78,7 +77,7 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 
 			// check if computed param is within ray.tmin and ray.tmax
 			float min_t;
-			if (t_plus > t_minus and t_plus > ray.tmin and t_plus < ray.tmax) {
+			if (t_plus < t_minus and t_plus > ray.tmin and t_plus < ray.tmax) {
 				min_t = t_plus;
 			} else if (t_minus > ray.tmin and t_minus < ray.tmax) {
 				min_t = t_minus;
@@ -93,6 +92,7 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 				min_distance = min_t;
 				intersection.hit = true;
 				intersection.mat = surface->mat;
+				//intersection.pos = transform_point_inverse(scene->camera->frame,point_on_sphere);
 				intersection.pos = point_on_sphere;
 				intersection.ray_t = min_t;
 				intersection.norm = normalize(point_on_sphere - surface->frame.o);
