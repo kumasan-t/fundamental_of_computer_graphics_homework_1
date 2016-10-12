@@ -1,20 +1,5 @@
 #include "scene.h"
 #include "intersect.h"
-/*
-Ray definition
-vec3f e;        // origin
-vec3f d;        // direction
-float tmin;     // min t value
-float tmax;     // max t value
-
-Intersection definition
-bool        hit;        // whether it hits something
-float       ray_t;      // ray parameter for the hit
-vec3f       pos;        // hit position
-vec3f       norm;       // hit normal
-Material*   mat;        // hit material
-*/
-
 
 // intersects the scene's surfaces and return the first intrerseciton (used for raytracing homework)
 intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
@@ -34,6 +19,9 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 			if ( dn != 0) {
 				t = dot((surface->frame.o - ray.e), surface->frame.z) / dn;
 			}
+			else {
+				continue;
+			}
 
 			if (t < ray.tmin or t > ray.tmax) {
 				continue;
@@ -48,7 +36,6 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 			} else {
 				// if hit, set intersection record value
 				if (t < min_distance) {
-					//intersection.pos = transform_point_inverse(scene->camera->frame,ray_at_t);
 					intersection.pos = ray_at_t;
 					intersection.ray_t = t;
 					intersection.hit = true;
@@ -60,7 +47,7 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 		// if it is a sphere
 		} else {
 			// compute ray intersection (and ray parameter), continue if not hit
-			auto a = lengthSqr(ray.d);
+			auto a = 1.0f;
 			auto b = 2 * dot(ray.d, (ray.e - surface->frame.o));
 			auto c = lengthSqr(ray.e - surface->frame.o) - pow(surface->radius,2);
 			auto d = pow(b,2) - 4 * a * c;
@@ -75,15 +62,10 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 				continue;
 			}
 
-			// check if computed param is within ray.tmin and ray.tmax
 			float min_t;
-			if (t_plus < t_minus and t_plus > ray.tmin and t_plus < ray.tmax) {
-				min_t = t_plus;
-			} else if (t_minus > ray.tmin and t_minus < ray.tmax) {
-				min_t = t_minus;
-			} else {
-				continue;
-			}
+			if (t_minus >= ray.tmin && t_minus <= ray.tmax) min_t = t_minus;
+			else if (t_plus >= ray.tmin && t_plus <= ray.tmax) min_t = t_plus;
+			else continue;
 
 			// check if this is the closest intersection, continue if not
 			auto point_on_sphere = ray.eval(min_t);
@@ -92,10 +74,12 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 				min_distance = min_t;
 				intersection.hit = true;
 				intersection.mat = surface->mat;
-				//intersection.pos = transform_point_inverse(scene->camera->frame,point_on_sphere);
 				intersection.pos = point_on_sphere;
 				intersection.ray_t = min_t;
 				intersection.norm = normalize(point_on_sphere - surface->frame.o);
+			}
+			else {
+				continue;
 			}
 		}
 		// record closest intersection
