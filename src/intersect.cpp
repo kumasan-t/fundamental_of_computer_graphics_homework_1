@@ -27,16 +27,16 @@ intersection3f intersect_surfaces(Scene* scene, ray3f ray) {
 				continue;
 			}
 
-			auto ray_at_t = ray.eval(t);									// world coordinate
-			auto plane_point = transform_point(surface->frame, ray_at_t);   // surface local coordinate
+			auto plane_point = ray.eval(t);
 			// check if this is the closest intersection, continue if not
-			if ( abs(plane_point.x) > surface->radius or
-				 abs(plane_point.y) > surface->radius) {
+			if ( abs(plane_point.x) > surface->frame.o.x + surface->radius ||
+				 abs(plane_point.y) > surface->frame.o.y + surface->radius ||
+				 abs(plane_point.z) > surface->frame.o.z + surface->radius) {
 				continue;
 			} else {
 				// if hit, set intersection record value
 				if (t < min_distance) {
-					intersection.pos = ray_at_t;
+					intersection.pos = plane_point;
 					intersection.ray_t = t;
 					intersection.hit = true;
 					intersection.norm = surface->frame.z;
