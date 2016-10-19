@@ -20,7 +20,7 @@ vec3f raytrace_ray(Scene* scene, ray3f ray) {
 		// compute light response
 		vec3f light_color = light->intensity / lengthSqr(light->frame.o - intersection.pos);
 
-		vec3f viewer_direction = normalize(scene->camera->frame.o - intersection.pos);
+		vec3f viewer_direction = normalize(ray.e - intersection.pos);
 
 		vec3f bisector_h = normalize(light_direction + viewer_direction);
 		vec3f diffuse = intersection.mat->kd;
@@ -67,14 +67,15 @@ image3f raytrace(Scene* scene) {
 				auto camera_frame = scene->camera->frame;
 				
 				// computer the ray direction				
-				vec3f ray_direction =
+				vec3f ray_direction = 
+					scene->camera->frame.o +
 					(u - 0.5f) * scene->camera->width * camera_frame.x +
 					(v - 0.5f) * scene->camera->height * camera_frame.y +
 					-1 * scene->camera->dist * camera_frame.z;
 
 				// compute camera ray
-				vec3f camera_ray = normalize(ray_direction);
-				ray3f ray = ray3f(camera_frame.o, camera_ray);
+				vec3f camera_ray = normalize(ray_direction - scene->camera->frame.o);
+				ray3f ray = ray3f(scene->camera->frame.o, camera_ray);
 				
 				// set pixel to the color raytraced with the ray
 				image.at(pixel_i, pixel_j) = raytrace_ray(scene, ray);
